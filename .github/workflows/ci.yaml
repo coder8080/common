@@ -1,0 +1,27 @@
+name: CI
+
+concurrency:
+  group: ci-mutex
+  cancel-in-progress: false
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install deps
+        run: uv sync --all-groups --all-packages
+      - name: Pyright
+        run: ./.venv/bin/pyright
+      - name: Ruff
+        run: ./.venv/bin/ruff check
