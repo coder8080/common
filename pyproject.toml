@@ -12,8 +12,20 @@ dependencies = [
     "langchain>=1.2.0",
     "langchain-ollama>=1.0.1",
     "langchain-openai>=1.1.6",
+    "langfuse>=3.11.2",
+    "openai>=2.14.0",
 ]
 
 [build-system]
 requires = ["uv_build>=0.9.18,<0.10.0"]
 build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"

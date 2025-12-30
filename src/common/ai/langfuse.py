@@ -1,6 +1,7 @@
-from common.env import get_str_env
 from langfuse import Langfuse, get_client
 from langfuse.langchain import CallbackHandler
+
+from common.env import get_str_env
 
 Langfuse(
     public_key=get_str_env("LANGFUSE_PUBLIC_KEY"),
