@@ -48,3 +48,21 @@ def str_to_loglevel(val: str) -> int:
             return logging.CRITICAL
         case _:
             raise RuntimeError(f"Unknown logging level: {val}")
+
+
+def get_int_list_env(key: str) -> list[int]:
+    try:
+        raw = getenv(key)
+        assert raw is not None
+        return [int(el) for el in raw.split(",")]
+    except (AssertionError, ValueError):
+        raise RuntimeError(f"{key} should be integers joined by ','")
+
+
+def get_str_list_env(key: str) -> list[str]:
+    try:
+        raw = getenv(key)
+        assert raw is not None
+        return raw.split(",")
+    except (AssertionError, ValueError):
+        raise RuntimeError(f"{key} should be strs joined by ','")
