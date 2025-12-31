@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+from typing import Any
 
 from aiogram import Bot
 from aiogram.types import Message
@@ -10,7 +11,11 @@ from .types import Agent, chunk_metadata_adapter
 
 
 async def stream_agent(
-    input: str | None, message: Message, bot: Bot, agent: Agent
+    input: str | None,
+    message: Message,
+    bot: Bot,
+    agent: Agent,
+    context: dict[str, Any] = dict(),
 ):
     if input is None:
         await message.answer(
@@ -53,6 +58,7 @@ async def stream_agent(
                 "langfuse_session_id": f"admin-{chat_id}",
             },
         },
+        context=context,
         stream_mode="messages",
     ):
         if not isinstance(token, AIMessageChunk):
