@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from aiogram import Bot
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from langchain.messages import AIMessageChunk
 from langgraph.types import Command, Interrupt
 
@@ -35,7 +35,11 @@ async def stream_agent(
 
     chat_id = message.chat.id
     message_id = (
-        await message.answer("Подождите...", parse_mode="html")
+        await message.answer(
+            "Подождите...",
+            parse_mode="html",
+            reply_markup=ReplyKeyboardRemove(),
+        )
     ).message_id
     await bot.send_chat_action(message.chat.id, "typing")
 
