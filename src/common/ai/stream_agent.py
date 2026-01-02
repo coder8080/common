@@ -6,9 +6,9 @@ from aiogram import Bot
 from aiogram.types import Message
 from langchain.messages import AIMessageChunk
 
-from src.common.ai.langfuse import langfuse, langfuse_handler
-from src.common.ai.types import Agent, chunk_metadata_adapter
-from src.common.logging import logger
+from common.ai.langfuse import langfuse, langfuse_handler
+from common.ai.types import Agent, chunk_metadata_adapter
+from common.logging import logger
 
 
 async def stream_agent(
