@@ -5,6 +5,7 @@ from typing import Any
 from aiogram import Bot
 from aiogram.types import Message
 from langchain.messages import AIMessageChunk
+from langgraph.types import Interrupt
 
 from common.ai.langfuse import langfuse, langfuse_handler
 from common.ai.types import Agent, chunk_metadata_adapter
@@ -17,12 +18,12 @@ async def stream_agent(
     bot: Bot,
     agent: Agent,
     context: dict[str, Any] = dict(),
-):
+) -> list[Interrupt]:
     if input is None:
         await message.answer(
             "Не удалось вас понять, попробуйте написать текстом"
         )
-        return
+        return []
 
     chat_id = message.chat.id
     message_id = (
@@ -48,6 +49,8 @@ async def stream_agent(
             return True
         except Exception:
             return False
+
+    interrupts: list[Interrupt] = []
 
     async for stream_mode, data in agent.astream(
         input={"messages": [{"role": "user", "content": input}]},
@@ -86,6 +89,7 @@ async def stream_agent(
 
             for source, update in data.items():
                 if source == "__interrupt__":
+                    interrupts.extend(update)
                     print(f"Received interrupt update: {update!r}")
         else:
             logger.error(f"Unexpected stream_mode: {stream_mode}")
@@ -99,3 +103,5 @@ async def stream_agent(
             await asyncio.sleep(rate_limit_seconds)
 
     langfuse.flush()
+
+    return interrupts
