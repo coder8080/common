@@ -6,7 +6,7 @@ from typing import Any
 from aiogram import Bot
 from aiogram.types import Message
 from langchain.messages import AIMessageChunk
-from langgraph.types import Interrupt
+from langgraph.types import Command, Interrupt
 
 from common.ai.langfuse import langfuse, langfuse_handler
 from common.ai.types import Agent, chunk_metadata_adapter
@@ -21,12 +21,13 @@ class StreamResponse:
 
 async def stream_agent(
     input: str | None,
+    resume: None | dict[str, str],
     message: Message,
     bot: Bot,
     agent: Agent,
     context: dict[str, Any] = dict(),
 ) -> StreamResponse:
-    if input is None:
+    if input is None and resume is None:
         ans = await message.answer(
             "Не удалось вас понять, попробуйте написать текстом"
         )
@@ -60,7 +61,11 @@ async def stream_agent(
     interrupts: list[Interrupt] = []
 
     async for stream_mode, data in agent.astream(
-        input={"messages": [{"role": "user", "content": input}]},
+        input=(
+            Command(resume=resume)
+            if resume
+            else {"messages": [{"role": "user", "content": input}]}
+        ),
         config={
             "configurable": {"thread_id": chat_id},
             "callbacks": [langfuse_handler],
