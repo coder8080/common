@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
@@ -12,18 +13,24 @@ from common.ai.types import Agent, chunk_metadata_adapter
 from common.logging import logger
 
 
+@dataclass
+class StreamResponse:
+    interrupts: list[Interrupt]
+    message_id: int
+
+
 async def stream_agent(
     input: str | None,
     message: Message,
     bot: Bot,
     agent: Agent,
     context: dict[str, Any] = dict(),
-) -> list[Interrupt]:
+) -> StreamResponse:
     if input is None:
-        await message.answer(
+        ans = await message.answer(
             "Не удалось вас понять, попробуйте написать текстом"
         )
-        return []
+        return StreamResponse(interrupts=[], message_id=ans.message_id)
 
     chat_id = message.chat.id
     message_id = (
@@ -104,4 +111,4 @@ async def stream_agent(
 
     langfuse.flush()
 
-    return interrupts
+    return StreamResponse(interrupts=interrupts, message_id=message_id)
