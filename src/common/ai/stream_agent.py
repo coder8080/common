@@ -21,7 +21,7 @@ class StreamResponse:
 
 async def stream_agent(
     input: str | None,
-    resume: None | dict[str, str],
+    resume: None | dict[str, str | None],
     message: Message,
     bot: Bot,
     agent: Agent,
