@@ -1,10 +1,11 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from aiogram import Bot
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.fsm.context import FSMContext
+from aiogram.types import ReplyKeyboardRemove
 from langchain.messages import AIMessageChunk
 from langgraph.types import Command, Interrupt
 
@@ -15,33 +16,37 @@ from common.logging import logger
 
 @dataclass
 class StreamResponse:
-    interrupts: list[Interrupt]
     message_id: int
 
 
 async def stream_agent(
     input: str | None,
     resume: None | dict[str, str | None],
-    message: Message,
     bot: Bot,
     agent: Agent,
+    chat_id: int,
+    state: FSMContext,
+    interrupt_handler: Callable[
+        [Interrupt, int, FSMContext, int], Awaitable[None]
+    ]
+    | None = None,
     context: dict[str, Any] = dict(),
 ) -> StreamResponse:
     if input is None and resume is None:
-        ans = await message.answer(
-            "Не удалось вас понять, попробуйте написать текстом"
+        ans = await bot.send_message(
+            chat_id, "Не удалось вас понять, попробуйте написать текстом"
         )
-        return StreamResponse(interrupts=[], message_id=ans.message_id)
+        return StreamResponse(message_id=ans.message_id)
 
-    chat_id = message.chat.id
     message_id = (
-        await message.answer(
+        await bot.send_message(
+            chat_id,
             "Подождите...",
             parse_mode="html",
             reply_markup=ReplyKeyboardRemove(),
         )
     ).message_id
-    await bot.send_chat_action(message.chat.id, "typing")
+    await bot.send_chat_action(chat_id, "typing")
 
     rate_limit_seconds = 0.3
     last_updated_at = datetime.now().timestamp() - rate_limit_seconds * 2
@@ -78,7 +83,7 @@ async def stream_agent(
                 "langfuse_session_id": f"admin-{chat_id}",
             },
         },
-        context=context,
+        context={**context, "chat_id": chat_id, "state": state},
         stream_mode=["messages", "updates"],
     ):
         if stream_mode == "messages":
@@ -120,4 +125,10 @@ async def stream_agent(
 
     langfuse.flush()
 
-    return StreamResponse(interrupts=interrupts, message_id=message_id)
+    for interrupt in interrupts:
+        assert interrupt_handler, (
+            f"Received interrupt {interrupt!r}, but no handler passed"
+        )
+        await interrupt_handler(interrupt, chat_id, state, message_id)
+
+    return StreamResponse(message_id=message_id)
