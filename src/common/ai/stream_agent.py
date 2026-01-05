@@ -5,7 +5,6 @@ from typing import Any, Awaitable, Callable
 
 from aiogram import Bot
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove
 from langchain.messages import AIMessageChunk
 from langgraph.types import Command, Interrupt
 
@@ -43,7 +42,7 @@ async def stream_agent(
             chat_id,
             "Подождите...",
             parse_mode="html",
-            reply_markup=ReplyKeyboardRemove(),
+            # reply_markup=ReplyKeyboardRemove(),
         )
     ).message_id
     await bot.send_chat_action(chat_id, "typing")
