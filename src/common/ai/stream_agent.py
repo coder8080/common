@@ -42,7 +42,6 @@ async def stream_agent(
             chat_id,
             "Подождите...",
             parse_mode="html",
-            # reply_markup=ReplyKeyboardRemove(),
         )
     ).message_id
     await bot.send_chat_action(chat_id, "typing")
