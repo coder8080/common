@@ -111,7 +111,7 @@ async def stream_agent(
             for source, update in data.items():
                 if source == "__interrupt__":
                     interrupts.extend(update)
-                    print(f"Received interrupt update: {update!r}")
+                    logger.info(f"Received interrupt update: {update!r}")
         else:
             logger.error(f"Unexpected stream_mode: {stream_mode}")
 

@@ -3,6 +3,8 @@ from typing import Any, Awaitable, Callable, Dict
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 
+from common.logs import logger
+
 from .recognition import transcribe
 
 
@@ -24,7 +26,12 @@ class RecognitionMiddleware(BaseMiddleware):
             else:
                 data["input"] = None
         except Exception as e:
-            print(e)
+            logger.error(
+                (
+                    f"Failed to parse message payload. Exception: {e}. "
+                    f"Update: {update!r}"
+                )
+            )
             data["input"] = None
 
         return await handler(update, data)
