@@ -11,7 +11,7 @@ from langgraph.types import Command, Interrupt
 
 from common.ai.langfuse import langfuse, langfuse_handler
 from common.ai.types import Agent, chunk_metadata_adapter
-from common.logging import logger
+from common.logs import logger
 
 
 @dataclass
@@ -52,7 +52,7 @@ async def stream_agent(
     last_updated_at = datetime.now().timestamp() - rate_limit_seconds * 2
     result_text = ""
 
-    async def update_response():
+    async def update_response() -> tuple[bool, Exception | None]:
         try:
             await asyncio.wait_for(
                 bot.edit_message_text(
@@ -63,9 +63,9 @@ async def stream_agent(
                 ),
                 timeout=2,
             )
-            return True
-        except Exception:
-            return False
+            return (True, None)
+        except Exception as e:
+            return (False, e)
 
     interrupts: list[Interrupt] = []
 
@@ -117,11 +117,16 @@ async def stream_agent(
 
     success = False
     tries = 5
+    exception: Exception | None = None
     while not success and tries > 0:
         tries -= 1
-        success = await update_response()
+        success, local_exception = await update_response()
         if not success:
+            exception = local_exception
             await asyncio.sleep(rate_limit_seconds)
+
+    if not success:
+        logger.error(f"Failed to update message: {exception}")
 
     langfuse.flush()
 
